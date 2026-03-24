@@ -1,5 +1,6 @@
 body {
     font-family: 'Prompt', sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes slideUp {
@@ -14,7 +15,7 @@ body {
 
 @keyframes emojiFloat {
     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-    100% { transform: translate(-50%, -150px) scale(1.5); opacity: 0; }
+    100% { transform: translate(-50%, -120px) scale(1.5); opacity: 0; }
 }
 
 .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
@@ -30,9 +31,10 @@ body {
     position: fixed;
     pointer-events: none;
     z-index: 9999;
-    font-size: 24px;
-    animation: emojiFloat 1s ease-out forwards;
+    font-size: 28px;
+    animation: emojiFloat 0.8s ease-out forwards;
     user-select: none;
+    will-change: transform, opacity;
 }
 
 #qrcode img {
