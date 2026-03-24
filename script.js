@@ -57,20 +57,16 @@ removeFileBtn.addEventListener('click', () => {
 
 uploadBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
-    
     uploadBtn.classList.add('hidden');
     fileInfo.classList.add('hidden');
     progressArea.classList.remove('hidden');
-
     try {
         const serverRes = await fetch('https://api.gofile.io/servers', { method: 'GET' });
         const serverData = await serverRes.json();
         if (serverData.status !== 'ok') throw new Error("Server Gofile มีปัญหา กรุณาลองใหม่");
         const server = serverData.data.servers[0].name;
-
         const formData = new FormData();
         formData.append('file', selectedFile);
-
         const xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', (e) => {
             if (e.lengthComputable) {
@@ -79,25 +75,16 @@ uploadBtn.addEventListener('click', async () => {
                 progressPercent.textContent = percent + '%';
             }
         });
-
         xhr.addEventListener('load', () => {
             if (xhr.status >= 200 && xhr.status < 300) {
                 const response = JSON.parse(xhr.responseText);
-                if (response.status === 'ok') {
-                    showSuccess(response.data.downloadPage);
-                } else {
-                    handleError(response.error || "อัปโหลดล้มเหลว");
-                }
-            } else {
-                handleError("เกิดข้อผิดพลาดจากเซิร์ฟเวอร์");
-            }
+                if (response.status === 'ok') showSuccess(response.data.downloadPage);
+                else handleError(response.error || "อัปโหลดล้มเหลว");
+            } else handleError("เกิดข้อผิดพลาดจากเซิร์ฟเวอร์");
         });
-
         xhr.open('POST', `https://${server}.gofile.io/contents/uploadfile`);
         xhr.send(formData);
-    } catch (error) {
-        handleError(error.message);
-    }
+    } catch (error) { handleError(error.message); }
 });
 
 function showSuccess(link) {
@@ -128,3 +115,14 @@ copyBtn.addEventListener('click', () => {
 });
 
 resetBtn.addEventListener('click', () => location.reload());
+
+window.addEventListener('click', (e) => {
+    const emojis = ['พ่อมึงตาย', 'แม่มึงตาย', 'พ่อมึงตาย', 'แม่มึงตาย', 'พ่อมึงตาย', 'แม่มึงตาย', 'พ่อมึงตาย', 'แม่มึงตาย'];
+    const emoji = document.createElement('div');
+    emoji.className = 'click-emoji';
+    emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    emoji.style.left = e.clientX + 'px';
+    emoji.style.top = e.clientY + 'px';
+    document.body.appendChild(emoji);
+    setTimeout(() => emoji.remove(), 1000);
+});
