@@ -1,6 +1,18 @@
 body {
     font-family: 'Prompt', sans-serif;
     -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    user-select: none;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+    background: #f8fafc;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
 }
 
 @keyframes slideUp {
@@ -21,26 +33,15 @@ body {
 .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
 .animate-fade-in { animation: fadeIn 0.6s ease-in forwards; }
 
-.dragover { 
-    border-color: #6366f1 !important; 
-    background-color: #eef2ff !important; 
-    transform: scale(1.02);
-}
-
 .click-emoji {
     position: fixed;
     pointer-events: none;
     z-index: 9999;
     font-size: 28px;
     animation: emojiFloat 0.8s ease-out forwards;
-    user-select: none;
-    will-change: transform, opacity;
 }
 
 #qrcode img {
     margin: auto;
     border-radius: 0.75rem;
 }
-
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
