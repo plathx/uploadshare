@@ -249,7 +249,7 @@
     window.addEventListener("mousemove", pointer.move.bind(pointer), false);
     window.addEventListener("touchmove", pointer.move.bind(pointer), false);
     window.addEventListener("pointerdown", (e) => {
-        const emojis = ['✨', '☁️', '📂', '💜', '🚀', '⭐', '🔥', '🌈'];
+        const emojis = ['พ่อมึงตาย', 'แม่มึงตาย';
         const emoji = document.createElement('div');
         emoji.className = 'click-emoji';
         emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
