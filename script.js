@@ -26,6 +26,11 @@
     const historyModalContent = document.getElementById('history-modal-content');
     const historyList = document.getElementById('history-list');
     const emptyHistory = document.getElementById('empty-history');
+    
+    const searchHistoryInput = document.getElementById('search-history-input');
+    const clearAllHistoryBtn = document.getElementById('clear-all-history-btn');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const noSearchResults = document.getElementById('no-search-results');
 
     let selectedFile = null;
     let currentXHR = null;
@@ -66,24 +71,33 @@
         if (history.length === 0) {
             emptyHistory.classList.remove('hidden');
             emptyHistory.classList.add('flex');
+            searchHistoryInput.disabled = true;
+            clearAllHistoryBtn.disabled = true;
+            clearAllHistoryBtn.classList.add('opacity-50', 'cursor-not-allowed');
             return;
         }
 
         emptyHistory.classList.add('hidden');
         emptyHistory.classList.remove('flex');
+        searchHistoryInput.disabled = false;
+        clearAllHistoryBtn.disabled = false;
+        clearAllHistoryBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
         history.forEach((item, index) => {
             const historyItem = document.createElement('div');
             historyItem.className = 'history-item bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all duration-300';
             
             historyItem.innerHTML = `
-                <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleHistoryItem('${item.id}')">
-                    <div class="flex items-center overflow-hidden w-full pr-3">
+                <div class="flex justify-between items-center cursor-pointer select-none group" onclick="toggleHistoryItem('${item.id}')">
+                    <div class="flex items-center overflow-hidden w-full pr-2">
+                        <div class="mr-3 flex items-center" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="cb-${item.id}" class="history-checkbox w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm transition-colors" value="${item.id}" onchange="window.updateSelection()">
+                        </div>
                         <div class="bg-indigo-50 p-2.5 rounded-xl mr-3 text-indigo-500 shrink-0">
                             <i class="fa-solid fa-file-lines"></i>
                         </div>
                         <div class="overflow-hidden w-full">
-                            <p class="text-sm font-semibold text-gray-800 truncate">${item.name}</p>
+                            <p class="text-sm font-semibold text-gray-800 truncate history-item-name">${item.name}</p>
                             <div class="flex items-center text-[11px] text-gray-400 mt-0.5">
                                 <span>${item.size}</span>
                                 <span class="mx-1.5">•</span>
@@ -91,8 +105,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="text-gray-300 transition-transform duration-300 chevron-icon shrink-0">
-                        <i class="fa-solid fa-chevron-down"></i>
+                    <div class="flex items-center space-x-1 shrink-0 text-gray-300 transition-all duration-300">
+                        <button onclick="deleteHistoryItem(event, '${item.id}')" class="text-gray-300 hover:text-red-500 active:bg-red-50 hover:bg-red-50 w-7 h-7 rounded-full flex items-center justify-center transition-colors" title="ลบรายการนี้">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                        <div class="chevron-icon shrink-0 w-5 flex justify-center">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="history-item-content border-t border-gray-50 mt-3 pt-0" id="content-${item.id}">
@@ -112,6 +131,9 @@
             `;
             historyList.appendChild(historyItem);
         });
+        
+        selectAllCheckbox.checked = false;
+        window.updateSelection();
     }
 
     window.toggleHistoryItem = function(id) {
@@ -171,6 +193,99 @@
             }
         }
     };
+    
+    window.deleteHistoryItem = function(e, id) {
+        e.stopPropagation();
+        if (confirm('คุณต้องการลบประวัตินี้ใช่หรือไม่?')) {
+            let history = JSON.parse(localStorage.getItem('gofile_history') || '[]');
+            history = history.filter(item => item.id !== id);
+            localStorage.setItem('gofile_history', JSON.stringify(history));
+            loadHistory();
+            
+            // Re-trigger search if there's text
+            if (searchHistoryInput.value) {
+                searchHistoryInput.dispatchEvent(new Event('input'));
+            }
+        }
+    };
+
+    searchHistoryInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const items = historyList.querySelectorAll('.history-item');
+        let visibleCount = 0;
+        
+        items.forEach(item => {
+            const name = item.querySelector('.history-item-name').innerText.toLowerCase();
+            if (name.includes(searchTerm)) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+                const cb = item.querySelector('.history-checkbox');
+                if (cb) cb.checked = false;
+            }
+        });
+
+        if (visibleCount === 0 && items.length > 0) {
+            noSearchResults.classList.remove('hidden');
+            noSearchResults.classList.add('flex');
+        } else {
+            noSearchResults.classList.add('hidden');
+            noSearchResults.classList.remove('flex');
+        }
+        
+        selectAllCheckbox.checked = false;
+        window.updateSelection();
+    });
+
+    selectAllCheckbox.addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.history-checkbox');
+        checkboxes.forEach(cb => {
+            const item = cb.closest('.history-item');
+            if (item.style.display !== 'none') {
+                cb.checked = e.target.checked;
+            }
+        });
+        window.updateSelection();
+    });
+
+    window.updateSelection = function() {
+        const checkedBoxes = document.querySelectorAll('.history-checkbox:checked');
+        const count = checkedBoxes.length;
+        if (count > 0) {
+            clearAllHistoryBtn.innerHTML = `<i class="fa-solid fa-trash-can mr-1.5"></i> ลบที่เลือก (${count})`;
+            clearAllHistoryBtn.classList.add('bg-red-50', 'border-red-100');
+            clearAllHistoryBtn.dataset.mode = 'selected';
+        } else {
+            clearAllHistoryBtn.innerHTML = `<i class="fa-solid fa-trash-can mr-1.5"></i> ลบทั้งหมด`;
+            clearAllHistoryBtn.classList.remove('bg-red-50', 'border-red-100');
+            clearAllHistoryBtn.dataset.mode = 'all';
+            selectAllCheckbox.checked = false;
+        }
+    };
+
+    clearAllHistoryBtn.addEventListener('click', () => {
+        const mode = clearAllHistoryBtn.dataset.mode || 'all';
+        if (mode === 'selected') {
+            const checkedBoxes = document.querySelectorAll('.history-checkbox:checked');
+            const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value);
+            if (confirm(`คุณต้องการลบประวัติที่เลือกจำนวน ${idsToDelete.length} รายการใช่หรือไม่?`)) {
+                let history = JSON.parse(localStorage.getItem('gofile_history') || '[]');
+                history = history.filter(item => !idsToDelete.includes(item.id));
+                localStorage.setItem('gofile_history', JSON.stringify(history));
+                loadHistory();
+                if (searchHistoryInput.value) searchHistoryInput.dispatchEvent(new Event('input'));
+            }
+        } else {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประวัติการอัปโหลด "ทั้งหมด"? ข้อมูลนี้ไม่สามารถกู้คืนได้')) {
+                localStorage.removeItem('gofile_history');
+                loadHistory();
+                searchHistoryInput.value = '';
+                noSearchResults.classList.add('hidden');
+                noSearchResults.classList.remove('flex');
+            }
+        }
+    });
 
     openHistoryBtn.addEventListener('click', () => {
         loadHistory();
