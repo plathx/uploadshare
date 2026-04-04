@@ -17,6 +17,8 @@
     const resetBtn = document.getElementById('reset-btn');
     const errorMessage = document.getElementById('error-message');
     const qrcodeContainer = document.getElementById('qrcode');
+    const cancelUploadBtn = document.getElementById('cancel-upload-btn');
+    const downloadQrBtn = document.getElementById('download-qr-btn');
     
     const openHistoryBtn = document.getElementById('open-history-btn');
     const closeHistoryBtn = document.getElementById('close-history-btn');
@@ -26,6 +28,7 @@
     const emptyHistory = document.getElementById('empty-history');
 
     let selectedFile = null;
+    let currentXHR = null;
 
     function formatBytes(bytes, decimals = 2) {
         if (bytes === 0) return '0 Bytes';
@@ -93,8 +96,11 @@
                     </div>
                 </div>
                 <div class="history-item-content border-t border-gray-50 mt-3 pt-0" id="content-${item.id}">
-                    <div class="bg-gray-50 rounded-xl p-4 flex flex-col items-center justify-center mb-4">
+                    <div class="bg-gray-50 rounded-xl p-4 flex flex-col items-center justify-center mb-4 mt-3">
                         <div id="qr-${item.id}" class="p-1 bg-white rounded-lg shadow-sm"></div>
+                        <button onclick="downloadHistoryQr('${item.id}', '${item.name}')" class="mt-3 text-[10px] bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 py-1.5 px-3 rounded-lg font-medium transition-colors flex items-center shadow-sm">
+                            <i class="fa-solid fa-download mr-1"></i> โหลด QR
+                        </button>
                     </div>
                     <div class="relative group">
                         <input type="text" id="link-${item.id}" readonly value="${item.link}" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 block p-3 pr-12 outline-none transition select-text">
@@ -142,6 +148,28 @@
             icon.className = 'fa-regular fa-copy text-xs'; 
             copyBtn.classList.replace('bg-green-600', 'bg-gray-900');
         }, 2000);
+    };
+
+    window.downloadHistoryQr = function(id, name) {
+        const qrContainer = document.getElementById(`qr-${id}`);
+        const qrCanvas = qrContainer.querySelector('canvas');
+        const defaultName = name ? name.replace(/\.[^/.]+$/, "") : 'Gofile_QR';
+        
+        if (qrCanvas) {
+            const dataURL = qrCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `QR_${defaultName}.png`;
+            link.click();
+        } else {
+            const qrImg = qrContainer.querySelector('img');
+            if (qrImg && qrImg.src) {
+                const link = document.createElement('a');
+                link.href = qrImg.src;
+                link.download = `QR_${defaultName}.png`;
+                link.click();
+            }
+        }
     };
 
     openHistoryBtn.addEventListener('click', () => {
@@ -208,6 +236,7 @@
             const formData = new FormData();
             formData.append('file', selectedFile);
             const xhr = new XMLHttpRequest();
+            currentXHR = xhr;
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
                     const percent = Math.round((e.loaded / e.total) * 100);
@@ -216,6 +245,7 @@
                 }
             });
             xhr.addEventListener('load', () => {
+                currentXHR = null;
                 if (xhr.status >= 200 && xhr.status < 300) {
                     const response = JSON.parse(xhr.responseText);
                     if (response.status === 'ok') {
@@ -225,9 +255,28 @@
                     else handleError(response.error || "Upload failed");
                 } else handleError("Server Error");
             });
+            xhr.addEventListener('error', () => {
+                currentXHR = null;
+                handleError("Network Error");
+            });
+            xhr.addEventListener('abort', () => {
+                currentXHR = null;
+            });
             xhr.open('POST', `https://${server}.gofile.io/contents/uploadfile`);
             xhr.send(formData);
         } catch (error) { handleError(error.message); }
+    });
+
+    cancelUploadBtn.addEventListener('click', () => {
+        if (currentXHR) {
+            currentXHR.abort();
+            currentXHR = null;
+        }
+        progressArea.classList.add('hidden');
+        uploadBtn.classList.remove('hidden');
+        fileInfo.classList.remove('hidden');
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
     });
 
     function showSuccess(link) {
@@ -255,6 +304,27 @@
             icon.className = 'fa-regular fa-copy'; 
             copyBtn.classList.replace('bg-green-600', 'bg-gray-900');
         }, 2000);
+    });
+
+    downloadQrBtn.addEventListener('click', () => {
+        const qrCanvas = qrcodeContainer.querySelector('canvas');
+        const defaultName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : 'Gofile_QR';
+        
+        if (qrCanvas) {
+            const dataURL = qrCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `QR_${defaultName}.png`;
+            link.click();
+        } else {
+            const qrImg = qrcodeContainer.querySelector('img');
+            if (qrImg && qrImg.src) {
+                const link = document.createElement('a');
+                link.href = qrImg.src;
+                link.download = `QR_${defaultName}.png`;
+                link.click();
+            }
+        }
     });
 
     resetBtn.addEventListener('click', () => location.reload());
