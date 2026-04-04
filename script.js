@@ -574,16 +574,24 @@
     window.addEventListener("mousemove", pointer.move.bind(pointer), false);
     window.addEventListener("touchmove", pointer.move.bind(pointer), false);
     window.addEventListener("pointerdown", (e) => {
-        if (e.target.closest('#history-modal-content') || e.target.closest('#open-history-btn')) return;
+        const ripple = document.createElement('div');
+        ripple.className = 'click-ripple';
+        ripple.style.left = e.clientX + 'px';
+        ripple.style.top = e.clientY + 'px';
+        document.body.appendChild(ripple);
         
-        const emojis = [''];
-        const emoji = document.createElement('div');
-        emoji.className = 'click-emoji';
-        emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-        emoji.style.left = e.clientX + 'px';
-        emoji.style.top = e.clientY + 'px';
-        document.body.appendChild(emoji);
-        setTimeout(() => emoji.remove(), 800);
+        setTimeout(() => {
+            const ripple2 = document.createElement('div');
+            ripple2.className = 'click-ripple';
+            ripple2.style.left = e.clientX + 'px';
+            ripple2.style.top = e.clientY + 'px';
+            ripple2.style.animationDuration = '0.8s';
+            ripple2.style.borderColor = 'rgba(168, 85, 247, 0.6)';
+            document.body.appendChild(ripple2);
+            setTimeout(() => ripple2.remove(), 800);
+        }, 120);
+
+        setTimeout(() => ripple.remove(), 600);
     });
 
     window.addEventListener('contextmenu', (e) => e.preventDefault());
