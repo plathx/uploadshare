@@ -33,10 +33,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// ── Serve Static Files (index.html, script.js, style.css) ──
+// ── Serve Static Files ──────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Root Route ──────────────────────────────────────────────
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
