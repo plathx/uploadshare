@@ -468,9 +468,13 @@ app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ── Start Server ────────────────────────────────────────────
-app.listen(PORT, () => {
-    console.log(`
+// ── Export for Vercel Serverless ────────────────────────────
+module.exports = app;
+
+// ── Local Development Server ────────────────────────────────
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║                  UPLOADSHARE SERVER ONLINE                 ║
 ╚════════════════════════════════════════════════════════════╝
@@ -490,10 +494,11 @@ app.listen(PORT, () => {
 
 📊 Health Check: http://localhost:${PORT}/health
 
-    `);
-});
+        `);
+    });
 
-process.on('SIGINT', () => {
-    console.log('\n\n🛑 Server stopped');
-    process.exit(0);
-});
+    process.on('SIGINT', () => {
+        console.log('\n\n🛑 Server stopped');
+        process.exit(0);
+    });
+}

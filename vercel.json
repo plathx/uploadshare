@@ -1,36 +1,31 @@
 {
   "version": 2,
+  "public": true,
   "builds": [
     {
-      "src": "server.js",
+      "src": "package.json",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/upload/(.*)",
-      "dest": "/server.js"
+      "dest": "server.js"
     },
     {
       "src": "/health",
-      "dest": "/server.js"
+      "dest": "server.js"
     },
     {
       "src": "/(.*\\.(js|css|jpg|png|gif|ico|svg|woff|woff2|ttf|eot))",
-      "dest": "/server.js"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/server.js"
+      "dest": "server.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
   }
 }
