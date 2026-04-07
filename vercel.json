@@ -3,18 +3,18 @@
   "public": true,
   "builds": [
     {
-      "src": "package.json",
+      "src": "api/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/upload/(.*)",
-      "dest": "server.js"
+      "dest": "/api/server.js"
     },
     {
       "src": "/health",
-      "dest": "server.js"
+      "dest": "/api/server.js"
     },
     {
       "src": "/(.*\\.(js|css|jpg|png|gif|ico|svg|woff|woff2|ttf|eot))",
@@ -22,7 +22,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "/api/server.js"
     }
   ],
   "env": {
