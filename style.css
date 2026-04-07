@@ -1,0 +1,201 @@
+body {
+    font-family: 'Prompt', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    user-select: none;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+    background: #f8fafc;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes emojiFloat {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -120px) scale(1.5); opacity: 0; }
+}
+
+.animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+.animate-fade-in { animation: fadeIn 0.6s ease-in forwards; }
+
+.click-emoji {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    font-size: 28px;
+    animation: emojiFloat 0.8s ease-out forwards;
+}
+
+@keyframes rippleWave {
+    0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 1;
+        border-width: 3px;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+        border-width: 0.5px;
+    }
+}
+
+.click-ripple {
+    position: fixed;
+    pointer-events: none;
+    z-index: 99999;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(99, 102, 241, 0.8);
+    border-radius: 50%;
+    animation: rippleWave 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    box-shadow: 0 0 6px rgba(99, 102, 241, 0.4), inset 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+#qrcode img {
+    margin: auto;
+    border-radius: 0.75rem;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.history-item-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.history-item.expanded .history-item-content {
+    max-height: 500px;
+    opacity: 1;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.history-item.expanded .chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* === Infinite Loop Carousel === */
+.pc-outer {
+    position: relative;
+    height: 108px;
+    cursor: grab;
+}
+.pc-outer:active { cursor: grabbing; }
+.pc-clip {
+    position: absolute; inset: 0; overflow: hidden;
+}
+.pc-track {
+    display: flex; align-items: center; gap: 10px;
+    position: absolute; top: 50%;
+    transform: translateY(-50%);
+    will-change: transform;
+    transition: transform 0.42s cubic-bezier(0.33, 1, 0.58, 1);
+    user-select: none;
+}
+/* Center highlight frame — purely decorative, no border conflict */
+.pc-frame {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 140px; height: 98px;
+    border: 2.5px solid #6366f1;
+    border-radius: 1.25rem;
+    box-shadow: 0 0 0 5px rgba(99,102,241,0.07), 0 6px 28px rgba(99,102,241,0.20);
+    pointer-events: none; z-index: 20;
+    animation: pcFramePulse 2.8s ease-in-out infinite;
+}
+@keyframes pcFramePulse {
+    0%, 100% { box-shadow: 0 0 0 5px rgba(99,102,241,0.07), 0 6px 28px rgba(99,102,241,0.20); }
+    50%       { box-shadow: 0 0 0 10px rgba(99,102,241,0.03), 0 10px 36px rgba(99,102,241,0.30); }
+}
+/* Fades */
+.pc-fade-l, .pc-fade-r {
+    position: absolute; top: 0; bottom: 0; width: 60px; z-index: 10; pointer-events: none;
+}
+.pc-fade-l { left: 0;  background: linear-gradient(to right, rgba(255,255,255,1) 20%, transparent); }
+.pc-fade-r { right: 0; background: linear-gradient(to left,  rgba(255,255,255,1) 20%, transparent); }
+/* Arrow buttons */
+.pc-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 30;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: white; border: 1.5px solid #e5e7eb;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; color: #6366f1; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.pc-arrow:hover  { background: #6366f1; color: white; border-color: #6366f1; transform: translateY(-50%) scale(1.14); }
+.pc-arrow:active { transform: translateY(-50%) scale(0.94); }
+.pc-arrow-l { left: 2px; }
+.pc-arrow-r { right: 2px; }
+/* Card — NO border highlight on is-active (pc-frame handles that) */
+.pc-card {
+    flex: none; width: 132px; height: 90px;
+    background: white; border: 1.5px solid #e9ecef;
+    border-radius: 1.1rem; padding: 9px 11px 8px;
+    cursor: pointer; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+    user-select: none;
+    opacity: 0.38;
+    transform: scale(0.82);
+    transition: opacity 0.38s cubic-bezier(0.33,1,0.58,1),
+                transform 0.38s cubic-bezier(0.33,1,0.58,1),
+                box-shadow 0.38s ease;
+}
+.pc-card.is-adjacent {
+    opacity: 0.68;
+    transform: scale(0.91);
+}
+.pc-card.is-active {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 6px 24px rgba(99,102,241,0.13);
+    border-color: transparent;
+}
+.pc-head {
+    display: flex; align-items: center; gap: 5px;
+}
+.pc-icon { font-size: 1rem; }
+.pc-name { font-size: 0.72rem; font-weight: 700; color: #1f2937; white-space: nowrap; }
+.pc-row {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.62rem; color: #6b7280; white-space: nowrap;
+}
+.pc-row b { color: #374151; font-weight: 600; }
+.pc-row .pc-life { color: #9ca3af; }
+.pc-badge {
+    position: absolute; top: 0; right: 0;
+    background: #6366f1; color: white; font-size: 7.5px;
+    padding: 1.5px 5px; border-radius: 0 0.6rem 0 0.6rem;
+    font-weight: 700; line-height: 1.5; letter-spacing: 0.02em;
+}
+/* Dot indicators */
+.pc-dots { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
+.pc-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #d1d5db; cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.pc-dot.active { background: #6366f1; width: 16px; border-radius: 3px; }
