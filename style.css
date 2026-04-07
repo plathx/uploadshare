@@ -1,0 +1,98 @@
+body {
+    font-family: 'Prompt', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    user-select: none;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+    background: #f8fafc;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes emojiFloat {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -120px) scale(1.5); opacity: 0; }
+}
+
+.animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+.animate-fade-in { animation: fadeIn 0.6s ease-in forwards; }
+
+.click-emoji {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    font-size: 28px;
+    animation: emojiFloat 0.8s ease-out forwards;
+}
+
+@keyframes rippleWave {
+    0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 1;
+        border-width: 3px;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+        border-width: 0.5px;
+    }
+}
+
+.click-ripple {
+    position: fixed;
+    pointer-events: none;
+    z-index: 99999;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(99, 102, 241, 0.8);
+    border-radius: 50%;
+    animation: rippleWave 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    box-shadow: 0 0 6px rgba(99, 102, 241, 0.4), inset 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+#qrcode img {
+    margin: auto;
+    border-radius: 0.75rem;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.history-item-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.history-item.expanded .history-item-content {
+    max-height: 500px;
+    opacity: 1;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.history-item.expanded .chevron-icon {
+    transform: rotate(180deg);
+}

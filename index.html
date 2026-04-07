@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gofile - ฝากไฟล์ & แชร์ด้วยคิวอาร์โค้ด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-white min-h-screen flex items-center justify-center p-4 overflow-hidden select-none">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="bg-white/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl p-8 w-full max-w-md transition-all duration-300 border border-white relative z-10 touch-auto flex flex-col max-h-[90vh]">
+        <div class="overflow-y-auto hide-scrollbar pb-4">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-3xl mb-4 shadow-lg shadow-indigo-200 text-white transform -rotate-6 hover:rotate-0 transition duration-500">
+                    <i class="fa-solid fa-cloud-arrow-up text-4xl"></i>
+                </div>
+                <h1 class="text-2xl font-semibold text-gray-800 tracking-tight">อัปโหลด & แชร์ไฟล์</h1>
+                <p class="text-gray-500 text-sm mt-1">อัปโหลดไฟล์ฟรี พร้อมรับ Link และ QR Code</p>
+            </div>
+
+            <div id="drop-zone" class="border-2 border-dashed border-gray-200 rounded-[2rem] p-10 text-center transition-all duration-300 hover:border-indigo-400 hover:bg-white cursor-pointer mb-6 group relative overflow-hidden">
+                <input type="file" id="file-input" class="hidden">
+                <div class="bg-gray-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-100 group-hover:scale-110 transition duration-300">
+                    <i class="fa-solid fa-folder-plus text-2xl text-gray-400 group-hover:text-indigo-500 transition"></i>
+                </div>
+                <p class="text-gray-700 font-medium">เลือกไฟล์ หรือลากมาวาง</p>
+                <p class="text-gray-400 text-xs mt-2 uppercase tracking-widest">Unlimited Size</p>
+            </div>
+
+            <div id="file-info" class="hidden bg-white p-4 rounded-2xl flex items-center justify-between mb-6 border border-gray-100 shadow-sm animate-slide-up">
+                <div class="flex items-center overflow-hidden w-full pr-4">
+                    <div class="bg-indigo-500 p-3 rounded-xl mr-3 text-white shrink-0">
+                        <i class="fa-solid fa-file-circle-check text-lg"></i>
+                    </div>
+                    <div class="overflow-hidden w-full">
+                        <p id="file-name" class="text-sm font-semibold text-gray-800 truncate"></p>
+                        <p id="file-size" class="text-xs text-gray-400 mt-0.5 font-medium"></p>
+                    </div>
+                </div>
+                <button id="remove-file" class="text-gray-400 hover:text-red-500 transition-colors shrink-0 bg-gray-50 rounded-full w-9 h-9 flex items-center justify-center border border-gray-100">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="error-message" class="hidden text-red-500 text-sm text-center mb-4 bg-red-50 p-3 rounded-xl border border-red-100"></div>
+
+            <button id="upload-btn" disabled class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-4 rounded-2xl transition duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-indigo-100 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>เริ่มอัปโหลด</span>
+            </button>
+
+            <div id="progress-area" class="hidden mt-6">
+                <div class="flex justify-between text-xs font-bold text-gray-500 mb-2 uppercase tracking-tighter">
+                    <span id="progress-text">กำลังอัปโหลด...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden mb-3">
+                    <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <button id="cancel-upload-btn" class="w-full bg-red-50 hover:bg-red-100 text-red-500 font-medium py-2 px-4 rounded-xl transition duration-300 border border-red-100 flex items-center justify-center space-x-2 text-sm">
+                    <i class="fa-solid fa-stop"></i>
+                    <span>ยกเลิกการอัปโหลด</span>
+                </button>
+            </div>
+
+            <div id="result-area" class="hidden mt-8 animate-fade-in">
+                <div class="bg-green-50 border border-green-100 text-green-700 p-3 rounded-2xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-check-double mr-2"></i>
+                    <span class="font-semibold text-sm text-center">เรียบร้อย! ไฟล์พร้อมแชร์แล้ว</span>
+                </div>
+                <div class="bg-white border border-gray-100 p-6 rounded-[2rem] flex flex-col items-center justify-center mb-6 shadow-sm">
+                    <div id="qrcode" class="p-2 bg-white rounded-xl"></div>
+                    <div class="mt-4 flex flex-col items-center w-full">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">Scan to Download</p>
+                        <button id="download-qr-btn" class="text-xs bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 py-2 px-4 rounded-xl font-medium transition-colors flex items-center shadow-sm">
+                            <i class="fa-solid fa-download mr-1.5"></i> ดาวน์โหลด QR Code
+                        </button>
+                    </div>
+                </div>
+                <div class="relative group">
+                    <input type="text" id="result-link" readonly class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 block p-4 pr-14 outline-none transition select-text">
+                    <button id="copy-btn" class="absolute right-2 top-2 bottom-2 bg-gray-900 hover:bg-black text-white px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+                <button id="reset-btn" class="w-full mt-4 text-indigo-600 hover:text-indigo-800 font-semibold py-2 text-sm">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> อัปโหลดไฟล์ใหม่
+                </button>
+            </div>
+            
+            <button id="open-history-btn" class="w-full mt-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-3 px-4 rounded-2xl transition duration-300 border border-gray-200 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>ประวัติการอัปโหลดของเครื่องนี้</span>
+            </button>
+
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <a href="https://github.com/phwyverysad" target="_blank" class="inline-flex items-center text-gray-400 hover:text-gray-900 transition-all duration-300 group">
+                    <i class="fa-brands fa-github text-2xl mr-2 transform group-hover:scale-125 transition"></i>
+                    <span class="text-xs font-bold uppercase tracking-widest">GitHub</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-modal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden" id="history-modal-content">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white z-10">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-500 mr-2"></i> ประวัติการอัปโหลด
+                </h2>
+                <button id="close-history-btn" class="text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="px-5 py-3 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between gap-3 z-10">
+                <div class="flex items-center pr-2 border-r border-gray-200">
+                    <input type="checkbox" id="select-all-checkbox" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 shadow-sm cursor-pointer" title="เลือกทั้งหมด">
+                </div>
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" id="search-history-input" placeholder="ค้นหาชื่อไฟล์..." class="w-full bg-white border border-gray-200 text-gray-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 block py-2 pl-8 pr-3 outline-none transition">
+                </div>
+                <button id="clear-all-history-btn" data-mode="all" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 py-2 px-3 rounded-xl font-medium transition-colors flex items-center shrink-0 border border-transparent hover:border-red-100">
+                    <i class="fa-solid fa-trash-can mr-1.5"></i> ลบทั้งหมด
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto hide-scrollbar flex-1 bg-gray-50/50 relative" id="history-list-container">
+                <div id="no-search-results" class="hidden flex-col items-center justify-center py-10 text-gray-400 absolute inset-0 bg-gray-50/50 z-0">
+                    <i class="fa-solid fa-magnifying-glass text-3xl mb-3 opacity-30"></i>
+                    <p class="text-sm">ไม่พบไฟล์ที่ค้นหา</p>
+                </div>
+                <div id="empty-history" class="hidden flex-col items-center justify-center py-10 text-gray-400">
+                    <i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i>
+                    <p class="text-sm">ยังไม่มีประวัติการอัปโหลดบนเครื่องนี้</p>
+                </div>
+                <div id="history-list" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
